@@ -1,0 +1,19 @@
+# django
+data/
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+migrations/
+*.log
+
+# evironments
+funguy_venv/
+__pycache__/
+__init__.py
+.env
+.env-local
+
+# packaging
+build/
+.Python
+MANIFEST
