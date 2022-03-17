@@ -2,11 +2,11 @@ from django.urls import path, include
 
 from funguy_api.views import *
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested import routers
+from rest_framework_nested import routers as nested_routers
 
 
 # nested routing
-# router = routers.SimpleRouter()
+# router = nested_routers.SimpleRouter()
 # router.register(r'nodes', NodeViewSet)
 
 # disk_router = routers.NestedSimpleRouter(

@@ -6,7 +6,7 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'groups']
+        fields = ['id', 'username', 'password', 'email', 'groups']
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class GroupSerializer(serializers.ModelSerializer):
 class PartitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partition
-        fields = ['partition_name', 'partition_fstype', 'partition_mount',
+        fields = ['id', 'partition_name', 'partition_fstype', 'partition_mount',
                   'total_partition', 'partition_usage', 'partition_write', 'partition_read']
 
 
@@ -27,8 +27,8 @@ class DiskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Disk
-        fields = ['disk_name', 'total_disk',
-                  'disk_usage', 'disk_write', 'disk_read', 'id']
+        fields = ['id', 'disk_name', 'total_disk',
+                  'disk_usage', 'disk_write', 'disk_read']
 
     def create(self, validated_data):
         partitions_data = validated_data.pop('partitions')
@@ -43,8 +43,8 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ['host_name', 'ipv4', 'port', 'first_seen', 'last_seen', 'os',
-                  'os_release', 'os_version', 'device', 'processor', 'min_freq', 'max_freq', 'id']
+        fields = ['id', 'host_name', 'ipv4', 'port', 'first_seen', 'last_seen', 'os',
+                  'os_release', 'os_version', 'device', 'processor', 'min_freq', 'max_freq']
 
     def create(self, validated_data):
         disks = validated_data.pop('disks')
