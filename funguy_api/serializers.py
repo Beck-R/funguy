@@ -57,12 +57,14 @@ class NodeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         disks = validated_data.pop('disks')
         node = Node.objects.create(**validated_data)
-        for disk in disks:
-            partitions = disk.pop('partitions')
-            new_disk = Disk.objects.create(node=node, **disk)
+        if disks is not None:
+            for disk in disks:
+                partitions = disk.pop('partitions')
+                new_disk = Disk.objects.create(node=node, **disk)
 
-            for partition in partitions:
-                Partition.objects.create(disk=new_disk, **partition)
+            if partitions is not None:
+                for partition in partitions:
+                    Partition.objects.create(disk=new_disk, **partition)
 
         return node
 

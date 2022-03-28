@@ -12,24 +12,15 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
 
-class NodeViewSet(viewsets.ViewSet):
-    def list(self, request):
-        queryset = Node.objects.all()
-        serializer = NodeSerializer(queryset, many=True)
-        return Response(serializer.data)
+class NodeViewSet(viewsets.ModelViewSet):
+    serializer_class = NodeSerializer
+    queryset = Node.objects.all()
 
-    def retrieve(self, request, pk=None):
-        queryset = Node.objects.all()
-        node = get_object_or_404(queryset, pk=pk)
-        serializer = NodeSerializer(node, many=True)
-        return Response(serializer.data)
-
-    def create(self, request):
-        serializer = NodeSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def perform_destroy(self, instance):
+        node = instance.node
+        instance.delete()
+        node.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DiskViewSet(viewsets.ModelViewSet):
@@ -40,3 +31,8 @@ class DiskViewSet(viewsets.ModelViewSet):
 class PartitionViewSet(viewsets.ModelViewSet):
     serializer_class = PartitionSerializer
     queryset = Partition.objects.all()
+
+
+class BrewViewSet(viewsets.ViewSet):
+    def list(self, request):
+        return Response("I'm nothing but a teapot", status=status.HTTP_418_IM_A_TEAPOT)
