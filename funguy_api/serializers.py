@@ -41,8 +41,26 @@ class DiskSerializer(serializers.ModelSerializer):
             Partition.objects.create(disk=disk, **partition)
         return disk
 
-    def update(self, instance, validated_data):
-        pass
+    # see below
+    def update(self, instance, validated_data, partial=True):
+        instance.disk_name = validated_data.get(
+            'disk_name', instance.disk_name)
+        instance.total_disk = validated_data.get(
+            'total_disk', instance.total_disk)
+        instance.disk_usage = validated_data.get(
+            'disk_usage', instance.disk_usage)
+        instance.disk_write = validated_data.get(
+            'disk_write', instance.disk_write)
+        instance.disk_read = validated_data.get(
+            'disk_read', instance.disk_read)
+        instance.save()
+
+        if 'partitions' in validated_data:
+            instance.partitions.all().delete()
+            for partition in validated_data.get('partitions'):
+                Partition.objects.create(disk=instance, **partition)
+        instance.save()
+        return instance
 
 
 class NodeSerializer(serializers.ModelSerializer):
@@ -50,7 +68,7 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ['id', 'host_name', 'ipv4', 'port', 'first_seen', 'last_seen', 'os',
+        fields = ['id', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os',
                   'os_release', 'os_version', 'device', 'processor', 'min_freq', 'max_freq', 'disks']
         extra_kwargs = {'id': {'read_only': True}}
 
@@ -68,5 +86,48 @@ class NodeSerializer(serializers.ModelSerializer):
 
         return node
 
-    def update(self, instance, validated_data):
-        pass
+    # I think this kinda sucks but I didn't write this
+    def update(self, instance, validated_data, partial=True):
+        disks = validated_data.pop('disks')
+        instance.host_name = validated_data.get(
+            'host_name', instance.host_name)
+        instance.ipv4 = validated_data.get('ipv4', instance.ipv4)
+        instance.os = validated_data.get('os', instance.os)
+        instance.os_release = validated_data.get(
+            'os_release', instance.os_release)
+        instance.os_version = validated_data.get(
+            'os_version', instance.os_version)
+        instance.device = validated_data.get('device', instance.device)
+        instance.processor = validated_data.get(
+            'processor', instance.processor)
+        instance.min_freq = validated_data.get('min_freq', instance.min_freq)
+        instance.max_freq = validated_data.get('max_freq', instance.max_freq)
+        instance.save()
+
+        if disks is not None:
+            for disk in disks:
+                if 'id' in disk:
+                    # update
+                    instance_disk = Disk.objects.get(id=disk['id'])
+                    instance_disk.disk_name = disk.get(
+                        'disk_name', instance_disk.disk_name)
+                    instance_disk.total_disk = disk.get(
+                        'total_disk', instance_disk.total_disk)
+                    instance_disk.disk_usage = disk.get(
+                        'disk_usage', instance_disk.disk_usage)
+                    instance_disk.disk_write = disk.get(
+                        'disk_write', instance_disk.disk_write)
+                    instance_disk.disk_read = disk.get(
+                        'disk_read', instance_disk.disk_read)
+                    instance_disk.save()
+
+                    if 'partitions' in disk:
+                        # update
+                        for partition in disk['partitions']:
+                            if 'id' in partition:
+                                instance_partition = Partition.objects.get(
+                                    id=partition['id'])
+                                instance_partition.partition_name = partition.get(
+                                    'partition_name', instance_partition.partition_name)
+
+        return(instance)

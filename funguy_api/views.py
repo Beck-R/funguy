@@ -1,5 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework import mixins
+from rest_framework import generics
 from django.shortcuts import get_object_or_404
 
 
@@ -15,12 +17,6 @@ class UserViewSet(viewsets.ModelViewSet):
 class NodeViewSet(viewsets.ModelViewSet):
     serializer_class = NodeSerializer
     queryset = Node.objects.all()
-
-    def perform_destroy(self, instance):
-        node = instance.node
-        instance.delete()
-        node.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DiskViewSet(viewsets.ModelViewSet):

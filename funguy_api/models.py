@@ -5,7 +5,6 @@ class Node(models.Model):
     # Connection Info
     host_name = models.CharField(max_length=512)
     ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True, blank=True)
-    port = models.IntegerField()
     first_seen = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(auto_now=True)
 
