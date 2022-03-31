@@ -19,16 +19,6 @@ class NodeViewSet(viewsets.ModelViewSet):
     queryset = Node.objects.all()
 
 
-class DiskViewSet(viewsets.ModelViewSet):
-    serializer_class = DiskSerializer
-    queryset = Disk.objects.all()
-
-
-class PartitionViewSet(viewsets.ModelViewSet):
-    serializer_class = PartitionSerializer
-    queryset = Partition.objects.all()
-
-
 class BrewViewSet(viewsets.ViewSet):
     def list(self, request):
         return Response("I'm nothing but a teapot", status=status.HTTP_418_IM_A_TEAPOT)
