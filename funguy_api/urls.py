@@ -5,6 +5,7 @@ from rest_framework_nested import routers as nested_routers
 
 from funguy_api.views.views import *
 from funguy_api.views.brew import brew
+from funguy_api.views.command import send_command
 
 
 # standard routing
@@ -15,4 +16,5 @@ router.register(r'node', NodeViewSet, basename='node')
 urlpatterns = [
     path(r'', include(router.urls)),
     path(r'brew/', brew, name='brew'),
+    path(r'command/', send_command, name='send_command'),
 ]

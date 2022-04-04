@@ -8,15 +8,26 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'email', 'groups']
-        extra_kwargs = {'password': {'write_only': True},
-                        'id': {'read_only': True}}
+        fields = ['id', 'username', 'email', 'groups']
+        extra_kwargs = {'id': {'read_only': True}}
 
 
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['name', 'permissions']
+
+
+class CommandSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Command
+        fields = ['id', 'hash_sum', 'shell',
+                  'command', 'requested_at', 'completed_at']
+        extra_kwargs = {'id': {'read_only': True}}
+
+    def create(self, validated_data):
+        command = Command.objects.create(**validated_data)
+        return command
 
 
 class PartitionSerializer(serializers.ModelSerializer):
@@ -70,8 +81,8 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ['id', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os',
-                  'os_release', 'os_version', 'device', 'processor', 'min_freq', 'max_freq', 'disks']
+        fields = ['id', 'hash_sum', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os', 'os_release',
+                  'os_version', 'device', 'processor', 'min_freq', 'max_freq', 'disks']
         extra_kwargs = {'id': {'read_only': True}}
 
     def create(self, validated_data):
@@ -91,6 +102,8 @@ class NodeSerializer(serializers.ModelSerializer):
     # I think this kinda sucks but I didn't write this
     def update(self, instance, validated_data, partial=True):
         disks = validated_data.pop('disks')
+        instance.hash_sum = validated_data.get(
+            'hash_sum', instance.hash_sum)
         instance.host_name = validated_data.get(
             'host_name', instance.host_name)
         instance.ipv4 = validated_data.get('ipv4', instance.ipv4)

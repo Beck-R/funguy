@@ -1,11 +1,9 @@
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
 from django.utils import timezone
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework import mixins
-from rest_framework import generics
+
 
 from funguy_api.views.utils import get_ip
 from ..serializers import *
