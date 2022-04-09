@@ -24,6 +24,7 @@ class Node(models.Model):
     def __str__(self):
         return f'{self.host_name}:{self.hash_sum}'
 
+    # if node has contacted server in last two hours, set as active
     def is_active(self):
         now = timezone.now()
         return self.last_seen >= now - datetime.timedelta(hours=2)
@@ -60,20 +61,37 @@ class Partition(models.Model):
 
 
 class Command(models.Model):
-    hash_sum = models.CharField(max_length=512)
+    """ 
+    IMPORTANT!: sending a command to all nodes with a specific
+    shell syntax will error the nodes out that don't use
+    that same shell Ex. Like any powershell command to 
+    bash/zsh, and vice versa. NEED TO FIND SOLUTION
+    """
     shell_type = (
         ('default', 'Default'),
         ('bash', 'Bash'),
         ('zsh', 'Zsh'),
         ('powershell', 'Powershell'),
     )
+    group_options = (
+        ('all', 'All'),
+        ('individual', 'Individual'),
+    )
+
+    hash_sum = models.CharField(max_length=512, null=True, blank=True)
+    node = models.ForeignKey(
+        Node, related_name='commands', on_delete=models.CASCADE, null=True, blank=True)
+    group = models.CharField(
+        max_length=32, choices=group_options, default='all')
     shell = models.CharField(
         max_length=32, choices=shell_type, default='default')
     command = models.TextField()
     requested_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(auto_now_add=False, null=True)
-    node = models.ForeignKey(
-        Node, related_name='commands', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.node.host_name}:{self.command}'
+        # infer if it is a group or individual command
+        if self.node:
+            return f'{self.node.host_name}:{self.command}'
+        else:
+            return f'{self.group}:{self.command}'

@@ -10,12 +10,8 @@ from ..serializers import *
 from ..models import *
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-
-
-# can probably go back and just overwrite certain ModelViewSet methods
+# can probably go back and just overwrite certain ModelViewSet methods,
+# instead of writing all methods from scratch
 class NodeViewSet(viewsets.ViewSet):
     serializer_class = NodeSerializer
 
@@ -36,7 +32,8 @@ class NodeViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # don't return errors = obfuscation
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
         node = get_object_or_404(Node, pk=pk)
@@ -45,7 +42,8 @@ class NodeViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # don't return errors = obfuscation
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
         node = get_object_or_404(Node, pk=pk)
@@ -54,7 +52,8 @@ class NodeViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # don't return errors = obfuscation
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
         node = get_object_or_404(Node, pk=pk)
