@@ -21,8 +21,8 @@ class GroupSerializer(serializers.ModelSerializer):
 class CommandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Command
-        fields = ['id', 'hash_sum', 'group', 'shell',
-                  'command', 'requested_at', 'completed_at']
+        fields = ['id', 'hash_sum', 'group', 'shell', 'type',
+                  'command', 'repeat_at', 'requested_at', 'received_at']
         extra_kwargs = {'id': {'read_only': True}}
 
     def create(self, validated_data):

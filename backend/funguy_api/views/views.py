@@ -21,8 +21,10 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
+        hash_sum = request.headers["hash-sum"]
+
         queryset = Node.objects.all()
-        node = get_object_or_404(queryset, pk=pk)
+        node = get_object_or_404(queryset, hash_sum=hash_sum)
         serializer = NodeSerializer(node)
         return Response(serializer.data)
 
@@ -36,8 +38,13 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
-        node = get_object_or_404(Node, pk=pk)
+        hash_sum = request.headers["hash-sum"]
+
+        node = get_object_or_404(Node, hash_sum=hash_sum)
+
         node.last_seen = timezone.now()
+        node.save()
+
         serializer = NodeSerializer(node, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -46,8 +53,13 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
-        node = get_object_or_404(Node, pk=pk)
+        hash_sum = request.headers["hash-sum"]
+
+        node = get_object_or_404(Node, hash_sum=hash_sum)
+
         node.last_seen = timezone.now()
+        node.save()
+
         serializer = NodeSerializer(node, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -56,6 +68,8 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        node = get_object_or_404(Node, pk=pk)
+        hash_sum = request.headers["hash-sum"]
+
+        node = get_object_or_404(Node, hash_sum=hash_sum)
         node.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

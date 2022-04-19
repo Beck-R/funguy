@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
-from ..models import *
-from ..serializers import *
-from .utils import *
+from ..models import Command, Node
+from ..serializers import CommandSerializer
+from .utils import get_ip
 
 
 @api_view(('POST',))
@@ -27,11 +27,13 @@ def send(request):
 
     # all nodes
     except KeyError:
-        serializer = CommandSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        Nodes = Node.objects.all()
+        for node in Nodes:
+            serializer = CommandSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(node=node)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(('GET',))
@@ -46,7 +48,7 @@ def receive(request):
 
     # find commands that aren't completed, for this node, and all nodes
     commands = Command.objects.filter(
-        Q(completed_at__isnull=True, node=node) | Q(group='all', completed_at__isnull=True))
+        Q(recieved_at__isnull=True, node=node))
     serializer = CommandSerializer(commands, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -63,9 +65,12 @@ def signal(request):
     node.ipv4 = get_ip(request)
     node.save()
 
-    # mark command as completed
     command = get_object_or_404(Command, id=command_id)
-    command.completed_at = timezone.now()
-    command.save()
+    if command.node != node:
+        # may want to blacklist node, because it would only signal a command it doesn't
+        # own if tampering is involved.
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    command.received_at = timezone.now()
+    command.save()
     return Response(status=status.HTTP_200_OK)

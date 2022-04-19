@@ -61,19 +61,19 @@ class Partition(models.Model):
 
 
 class Command(models.Model):
-    """ 
-    IMPORTANT!: sending a command to all nodes with a specific
-    shell syntax will error the nodes out that don't use
-    that same shell Ex. Like any powershell command to 
-    bash/zsh, and vice versa. NEED TO FIND SOLUTION
-    """
     shell_type = (
         ('default', 'Default'),
         ('bash', 'Bash'),
         ('zsh', 'Zsh'),
         ('powershell', 'Powershell'),
     )
-    group_options = (
+    command_type = (
+        ('shell', 'Shell'),
+        ('macro', 'Macro'),
+        ('script', 'Script'),
+        ('scheduled', 'Scheduled'),
+    )
+    group_type = (
         ('all', 'All'),
         ('individual', 'Individual'),
     )
@@ -82,12 +82,18 @@ class Command(models.Model):
     node = models.ForeignKey(
         Node, related_name='commands', on_delete=models.CASCADE, null=True, blank=True)
     group = models.CharField(
-        max_length=32, choices=group_options, default='all')
+        max_length=32, choices=group_type, default='all')
+
     shell = models.CharField(
         max_length=32, choices=shell_type, default='default')
-    command = models.TextField()
+    type = models.CharField(
+        max_length=32, choices=command_type, default='shell')
+    command = models.TextField(null=True, blank=True)
+    script = models.FileField(upload_to='scripts/', null=True, blank=True)
+
+    repeat_at = models.DateTimeField(null=True, blank=True)
     requested_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateTimeField(auto_now_add=False, null=True)
+    received_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         # infer if it is a group or individual command
