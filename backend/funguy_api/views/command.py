@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
-from ..models import *
-from ..serializers import *
-from .utils import *
+from ..models import Command, Node
+from ..serializers import CommandSerializer
+from .utils import get_ip
 
 
 @api_view(('POST',))
@@ -60,9 +60,12 @@ def signal(request):
     node.ipv4 = get_ip(request)
     node.save()
 
-    # mark command as completed
     command = get_object_or_404(Command, id=command_id)
-    command.completed_at = timezone.now()
-    command.save()
+    if command.node != node:
+        # may want to blacklist node, because it would only signal a command it doesn't
+        # own if tampering is involved.
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    command.received_at = timezone.now()
+    command.save()
     return Response(status=status.HTTP_200_OK)

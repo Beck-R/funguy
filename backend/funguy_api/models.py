@@ -66,7 +66,7 @@ class Command(models.Model):
         ('macro', 'Macro'),
         ('scheduled', 'Scheduled'),
     )
-    group_options = (
+    group_type = (
         ('all', 'All'),
         ('individual', 'Individual'),
     )
