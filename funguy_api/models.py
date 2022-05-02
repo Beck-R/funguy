@@ -77,7 +77,7 @@ class Command(models.Model):
     command_type = models.CharField(
         max_length=32, choices=command_type, default='shell')
     group = models.CharField(
-        max_length=32, choices=group_options, default='all')
+        max_length=32, choices=group_type, default='all')
 
     command = models.TextField()
 

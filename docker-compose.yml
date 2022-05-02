@@ -11,11 +11,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
   web:
-    build: ./backend
+    build: .
     command: python manage.py runserver 0.0.0.0:8000
     container_name: funguy_web
     volumes:
-      - .:/code/backend
+      - .:/code
     ports:
       - "8000:8000"
     environment:
