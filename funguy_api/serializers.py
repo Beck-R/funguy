@@ -21,13 +21,9 @@ class GroupSerializer(serializers.ModelSerializer):
 class CommandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Command
-        fields = ['id', 'hash_sum', 'group', 'shell',
-                  'command', 'requested_at', 'completed_at']
+        fields = ['id', 'command_type', 'group', 'command',
+                  'repeat_at', 'issued_at', 'completed_at', ]
         extra_kwargs = {'id': {'read_only': True}}
-
-    def create(self, validated_data):
-        command = Command.objects.create(**validated_data)
-        return command
 
 
 class PartitionSerializer(serializers.ModelSerializer):
@@ -78,11 +74,12 @@ class DiskSerializer(serializers.ModelSerializer):
 
 class NodeSerializer(serializers.ModelSerializer):
     disks = DiskSerializer(many=True, allow_null=True)
+    commands = CommandSerializer(many=True, allow_null=True, read_only=True)
 
     class Meta:
         model = Node
         fields = ['id', 'hash_sum', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os', 'os_release',
-                  'os_version', 'device', 'processor', 'min_freq', 'max_freq', 'disks']
+                  'os_version', 'device', 'processor', 'min_freq', 'max_freq', 'disks', 'commands']
         extra_kwargs = {'id': {'read_only': True}}
 
     def create(self, validated_data):

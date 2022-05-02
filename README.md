@@ -3,9 +3,14 @@
 # Installation:
 
 First, you will need to setup a virtual environment using `python3 -m venv <venv>`.
+
 After that, you will need to activate said virtual environment using `source <venv>/bin/activate`.
+
 After you have done this you will need to install the neseccary dependencies using `pip3 install -r requirements.txt`.
+
 You should also create a django superuser by running `sudo docker-compose run web python manage.py createsuperuser`.
+
+You may need to run `sudo docker-compose run web python manage.py makemigrations funguy_api` to create the migrations.
 
 # Usage:
 

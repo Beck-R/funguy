@@ -14,24 +14,21 @@ from .utils import *
 
 @api_view(('POST',))
 def send(request):
-    # checking if this command is addressed to a specific node, or all nodes
-    # specific node
     try:
-        hash_sum = request.data["hash_sum"]
-        node = get_object_or_404(Node, hash_sum=hash_sum)
+        node = get_object_or_404(Node, hash_sum=request.data['hash_sum'])
         serializer = CommandSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(node=node)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # all nodes
     except KeyError:
-        serializer = CommandSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        nodes = Node.objects.all()
+        for node in nodes:
+            serializer = CommandSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(node=node)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(('GET',))
@@ -46,7 +43,7 @@ def receive(request):
 
     # find commands that aren't completed, for this node, and all nodes
     commands = Command.objects.filter(
-        Q(completed_at__isnull=True, node=node) | Q(group='all', completed_at__isnull=True))
+        Q(completed_at__isnull=True, node=node))
     serializer = CommandSerializer(commands, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
