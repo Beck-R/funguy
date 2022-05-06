@@ -1,10 +1,10 @@
-def get_ip(Request):
+def get_ip(request):
     # try to get ip from proxy, if None then get directly
     try:
-        ip = Request.META['HTTP_X_FORWARDED_FOR']
+        ip = request.META['HTTP_X_FORWARDED_FOR']
         ip = ip.split(",")[0]
     except:
-        ip = Request.META['REMOTE_ADDR']
+        ip = request.META['REMOTE_ADDR']
         ip = ip.split(",")[0]
 
     return ip

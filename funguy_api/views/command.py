@@ -15,7 +15,7 @@ from .utils import get_ip
 @api_view(('POST',))
 def send(request):
     try:
-        node = get_object_or_404(Node, hash_sum=request.data['hash_sum'])
+        node = get_object_or_404(Node, uuid=request.data['uuid'])
         serializer = CommandSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(node=node)
@@ -33,10 +33,10 @@ def send(request):
 
 @api_view(('GET',))
 def receive(request):
-    hash_sum = request.headers["hash-sum"]
+    uuid = request.headers["uuid"]
 
     # update last contact of node
-    node = get_object_or_404(Node, hash_sum=hash_sum)
+    node = get_object_or_404(Node, uuid=uuid)
     node.last_seen = timezone.now()
     node.ipv4 = get_ip(request)
     node.save()
@@ -51,11 +51,11 @@ def receive(request):
 
 @api_view(('GET',))
 def signal(request):
-    hash_sum = request.headers["hash-sum"]
+    uuid = request.headers["uuid"]
     command_id = request.headers["command-id"]
 
     # update last contact of node
-    node = get_object_or_404(Node, hash_sum=hash_sum)
+    node = get_object_or_404(Node, uuid=uuid)
     node.last_seen = timezone.now()
     node.ipv4 = get_ip(request)
     node.save()
@@ -66,6 +66,6 @@ def signal(request):
         # own if tampering is involved.
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    command.received_at = timezone.now()
+    command.completed_at = timezone.now()
     command.save()
     return Response(status=status.HTTP_200_OK)
