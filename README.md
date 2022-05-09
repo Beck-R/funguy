@@ -10,7 +10,7 @@ After you have done this you will need to install the neseccary dependencies usi
 
 You should also create a django superuser by running `sudo docker-compose run web python manage.py createsuperuser`.
 
-You may need to run `sudo docker-compose run web python manage.py makemigrations funguy_api` to create the migrations.
+You may need to run `sudo docker-compose run web python manage.py makemigrations funguy_api` to create initial migrations.
 
 # Usage:
 
