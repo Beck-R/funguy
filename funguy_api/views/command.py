@@ -16,7 +16,7 @@ def send(request):
     # find if all command or individual command
     try:
         # assign to single node
-        node = get_object_or_404(Node, uuid=request.data['uuid'])
+        node = get_object_or_404(Node, uuid=request.query_params['uuid'])
         serializer = CommandSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(node=node)

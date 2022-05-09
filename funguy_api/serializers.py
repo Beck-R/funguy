@@ -93,7 +93,7 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ['id', 'uuid', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os', 'os_release', 'os_version', 'device', 'processor', 'processor_cores',
+        fields = ['id', 'uuid', 'hash_sum', 'host_name', 'ipv4', 'first_seen', 'last_seen', 'os', 'os_release', 'os_version', 'device', 'processor', 'processor_cores',
                   'min_freq', 'max_freq', 'memory_total', 'processor_freq', 'processor_temp', 'processor_usage', 'memory_usage', 'disks']
         extra_kwargs = {'id': {'read_only': True}}
 

