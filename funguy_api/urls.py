@@ -16,6 +16,7 @@ router = DefaultRouter()
 
 router.register(r'node', NodeViewSet, basename='node')
 router.register(r'keylog', KeylogViewSet, basename='keylog')
+router.register(r'capture', CaptureViewSet, basename='capture')
 
 urlpatterns = [
     path(r'', include(router.urls)),

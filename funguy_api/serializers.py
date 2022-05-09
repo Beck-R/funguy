@@ -4,6 +4,8 @@ from rest_framework import serializers
 
 from .models import *
 
+import base64
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,6 +18,13 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['name', 'permissions']
+
+
+class CaptureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Capture
+        fields = ['id', 'type', 'capture', 'timestamp']
+        extra_kwargs = {'id': {'read_only': True}}
 
 
 class KeylogSerializer(serializers.ModelSerializer):

@@ -23,3 +23,9 @@ After making changes to the database, you must always run `sudo docker-compose r
 followed by `sudo docker-compose run web python manage.py migrate`.
 
 To use run manage.py commands use: `sudo docker-compose run web python manage.py <command>`.
+
+# Useful links:
+
+- [http://www.cs.virginia.edu/~evans/theses/cotter.pdf](http://www.cs.virginia.edu/~evans/theses/cotter.pdf)
+
+- [https://crypto.stackexchange.com/questions/8695/algorithm-how-to-use-x-and-y-mouse-movement-co-ordinates-to-generate-random-dat](https://crypto.stackexchange.com/questions/8695/algorithm-how-to-use-x-and-y-mouse-movement-co-ordinates-to-generate-random-dat)
