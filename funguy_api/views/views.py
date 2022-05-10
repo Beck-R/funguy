@@ -4,7 +4,6 @@ from django.utils import timezone
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from django.db.models import Q
 
 from funguy_api.views.utils import get_ip
 from ..serializers import *

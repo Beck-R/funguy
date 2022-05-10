@@ -4,8 +4,6 @@ from rest_framework import serializers
 
 from .models import *
 
-import base64
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
