@@ -33,3 +33,7 @@ To use run manage.py commands use: `sudo docker-compose run web python manage.py
 - [http://www.cs.virginia.edu/~evans/theses/cotter.pdf](http://www.cs.virginia.edu/~evans/theses/cotter.pdf)
 
 - [https://crypto.stackexchange.com/questions/8695/algorithm-how-to-use-x-and-y-mouse-movement-co-ordinates-to-generate-random-dat](https://crypto.stackexchange.com/questions/8695/algorithm-how-to-use-x-and-y-mouse-movement-co-ordinates-to-generate-random-dat)
+
+- [https://crates.io/crates/windows](https://crates.io/crates/windows)
+
+- [https://crates.io/crates/winapi](https://crates.io/crates/winapi)

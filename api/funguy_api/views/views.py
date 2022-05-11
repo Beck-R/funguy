@@ -118,6 +118,8 @@ class KeylogViewSet(viewsets.ViewSet):
         serializer = KeylogSerializer(queryset, many=True)
 
         # compile all keylogs into a zip archive
+        # FIX: returns all data on a node, not just the keylog
+        # maybe move to an export all data endpoint?
         log_paths = []
 
         for keylog_obg in serializer.data:

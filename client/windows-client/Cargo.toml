@@ -6,3 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+reqwest = "0.11.10" 
+rand = "0.8.5"
+serde = "1.0.137"
+
+[dependencies.windows]
+version = "0.36.1"
+features = [
+    "alloc",
+    "Data_Xml_Dom",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+]
