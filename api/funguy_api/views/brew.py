@@ -7,4 +7,4 @@ from .utils import get_ip
 @api_view(('GET',))
 def brew(request):
     ip = get_ip(request)
-    return Response(f"{ip}, I'm nothing but a teapot", status=status.HTTP_418_IM_A_TEAPOT)
+    return Response(ip, status=status.HTTP_418_IM_A_TEAPOT)
