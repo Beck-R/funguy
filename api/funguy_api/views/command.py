@@ -67,3 +67,15 @@ def signal(request):
     command.completed_at = timezone.now()
     command.save()
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(('GET',))
+def command_status(request):
+    command_id = request.query_params["command-id"]
+
+    command = get_object_or_404(Command, id=command_id)
+
+    if command.completed_at:
+        return Response(True, status=status.HTTP_200_OK)
+    else:
+        return Response(False, status=status.HTTP_204_NO_CONTENT)

@@ -8,6 +8,7 @@ from funguy_api.views.command import (
     send,
     receive,
     signal,
+    command_status,
 )
 
 
@@ -24,5 +25,6 @@ urlpatterns = [
 
     path(r'send/', send, name='send'),  # send command to node(s)
     path(r'receive/', receive, name='receive'),  # receive command
-    path(r'signal/', signal, name='signal'),  # command completion signal
+    path(r'signal/', signal, name='signal'),  # mark command as completed
+    path(r'status/', command_status, name='status'),  # check status of command
 ]

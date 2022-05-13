@@ -31,9 +31,8 @@ class Node(models.Model):
     os = models.CharField(max_length=512)
     os_release = models.CharField(max_length=512)
     os_version = models.CharField(max_length=512)
-    device = models.CharField(max_length=512)
     processor = models.CharField(max_length=512)
-    processor_cores = models.IntegerField(null=True, blank=True)
+    processor_count = models.IntegerField(null=True, blank=True)
     min_freq = models.FloatField()
     max_freq = models.FloatField()
     memory_total = models.IntegerField(null=True, blank=True)
@@ -50,11 +49,15 @@ class Node(models.Model):
     # if node has contacted server in last two hours, set as active
     def is_active(self):
         now = timezone.now()
-        return self.last_seen >= now - datetime.timedelta(hours=2)
+        return self.last_seen >= now - datetime.timedelta(minutes=5)
 
 
 class Disk(models.Model):
-    disk_name = models.CharField(max_length=512)
+    name = models.CharField(max_length=512)
+    disk_type = models.CharField(max_length=512)
+    fs_type = models.CharField(max_length=512)
+    mount_point = models.CharField(max_length=512)
+    is_removable = models.BooleanField(default=False)
     total_disk = models.IntegerField()
     disk_usage = models.IntegerField()
     disk_write = models.IntegerField()
@@ -65,22 +68,6 @@ class Disk(models.Model):
 
     def __str__(self):
         return f'{self.node.uuid}:{self.disk_name}'
-
-
-class Partition(models.Model):
-    partition_name = models.CharField(max_length=512)
-    partition_fstype = models.CharField(max_length=512)
-    partition_mount = models.CharField(max_length=512)
-    total_partition = models.IntegerField()
-    partition_usage = models.IntegerField()
-    partition_write = models.IntegerField()
-    partition_read = models.IntegerField()
-
-    disk = models.ForeignKey(Disk, related_name='partitions',
-                             on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.disk.disk_name}:{self.partition_name}'
 
 
 class Command(models.Model):
