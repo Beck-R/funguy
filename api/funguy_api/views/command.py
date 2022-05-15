@@ -8,7 +8,6 @@ from rest_framework import status
 
 from ..models import Command, Node
 from ..serializers import CommandSerializer
-from .utils import get_ip
 
 
 @api_view(('POST',))
@@ -38,7 +37,6 @@ def receive(request):
     # update last contact of node
     node = get_object_or_404(Node, uuid=request.headers["uuid"])
     node.last_seen = timezone.now()
-    node.ipv4 = get_ip(request)
     node.save()
 
     # find commands that aren't completed, and assigned to node
@@ -54,7 +52,6 @@ def signal(request):
     # update last contact of node
     node = get_object_or_404(Node, uuid=request.headers["uuid"])
     node.last_seen = timezone.now()
-    node.ipv4 = get_ip(request)
     node.save()
 
     # set command as completed

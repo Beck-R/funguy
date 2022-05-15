@@ -5,7 +5,6 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from funguy_api.views.utils import get_ip
 from ..serializers import *
 from ..models import *
 
@@ -31,14 +30,10 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        # support creation of hash of mouse/mic random input
-        request.data["ipv4"] = get_ip(request)
-
         # generate hash_sum
         random_input = request.data["random_input"].encode("utf-8")
 
         hashed_random = bcrypt.hashpw(random_input, bcrypt.gensalt(10))
-        print(hashed_random)
 
         request.data["hash_sum"] = hashed_random.decode("utf-8")
 
@@ -47,7 +42,7 @@ class NodeViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # don't return errors = obfuscation
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
         node = get_object_or_404(Node, uuid=request.headers["uuid"])
