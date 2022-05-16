@@ -1,3 +1,5 @@
+# cargo-features = ["strip"] # remove during development - reduces size, but increases build time
+
 [package]
 name = "windows-client"
 version = "0.1.0"
@@ -5,18 +7,30 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# [profile.release] # remove during all of the below during development - reduces size, but increases build time
+# strip = true
+# opt-level = 2
+# lto = true
+
 [dependencies]
-reqwest = "0.11.10" 
 rand = "0.8.5"
-serde = "1.0.137"
+serde = { version = "1.0.137", features = ["derive"] }
+sysinfo = "0.23.12"
+reqwest = "0.11.10"
+regex = "1.5.5"
+winreg = "0.10.1"
+tokio = { version = "1.18.2", features = ["full"] }
+
 
 [dependencies.windows]
 version = "0.36.1"
 features = [
     "alloc",
-    "Data_Xml_Dom",
     "Win32_Foundation",
-    "Win32_Security",
-    "Win32_System_Threading",
     "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Diagnostics_Debug",
 ]
+
+[dependencies.serde_json]
+version = "1.0.81"
+features = ["alloc"] # add `default-features = false` to enable no-std

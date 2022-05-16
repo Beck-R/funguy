@@ -23,7 +23,7 @@ class Node(models.Model):
                             null=False, blank=False)
     hash_sum = models.CharField(max_length=1024)
     host_name = models.CharField(max_length=512)
-    ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True, blank=True)
+    ipv4 = models.GenericIPAddressField(protocol='IPv4')
     first_seen = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(auto_now=True)
 
