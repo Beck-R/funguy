@@ -30,6 +30,12 @@ impl Drive {
             disk_read: 0,
         }
     }
+
+    fn update_realtime(&mut self, disk_usage: u64, disk_write: u64, disk_read: u64) {
+        self.disk_usage = disk_usage;
+        self.disk_write = disk_write;
+        self.disk_read = disk_read
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -103,5 +109,22 @@ impl Node {
         self.processor_freq = sys.global_processor_info().frequency();
         self.processor_usage = sys.global_processor_info().cpu_usage();
         self.memory_usage = sys.used_memory() / 1000;
+
+        for disk in sys.disks() {
+            let mut found = false;
+            for drive in &mut self.disks {
+                if drive.mount_point == disk.mount_point().display().to_string() {
+                    let disk_usage: u64 = (disk.total_space() - disk.available_space()) / 1000000;
+                    let disk_write: u64 = 0;
+                    let disk_read: u64 = 0;
+                    drive.update_realtime(disk_usage, disk_write, disk_read);
+                    found = true;
+                }
+            }
+            if !found {
+                let drive: Drive = Drive::new(disk);
+                self.disks.push(drive);
+            }
+        }
     }
 }

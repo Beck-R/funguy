@@ -44,19 +44,6 @@ class NodeViewSet(viewsets.ViewSet):
         # don't return errors = obfuscation
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, pk=None):
-        node = get_object_or_404(Node, uuid=request.headers["uuid"])
-
-        node.last_seen = timezone.now()
-        node.save()
-
-        serializer = NodeSerializer(node, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        # don't return errors = obfuscation
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
     def partial_update(self, request, pk=None):
         node = get_object_or_404(Node, uuid=request.headers["uuid"])
 
