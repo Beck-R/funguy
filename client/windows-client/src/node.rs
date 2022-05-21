@@ -1,3 +1,6 @@
+extern crate serde;
+extern crate sysinfo;
+
 use serde::{Deserialize, Serialize};
 use sysinfo::{Disk, DiskExt, ProcessorExt, System, SystemExt};
 

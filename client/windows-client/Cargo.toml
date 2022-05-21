@@ -1,4 +1,4 @@
-# cargo-features = ["strip"] # remove during development - reduces size, but increases build time
+cargo-features = ["strip"] # remove during development - reduces size, but increases build time
 
 [package]
 name = "windows-client"
@@ -7,10 +7,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# [profile.release] # remove during all of the below during development - reduces size, but increases build time
-# strip = true
-# opt-level = 2
-# lto = true
+[profile.release] # remove during all of the below during development - reduces size, but increases build time
+strip = true
+opt-level = 2
+lto = true
 
 [dependencies]
 rand = "0.8.5"
@@ -23,12 +23,13 @@ tokio = { version = "1.18.2", features = ["full"] }
 
 
 [dependencies.windows]
-version = "0.36.1"
+version = "0.37.0"
 features = [
     "alloc",
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",
     "Win32_System_Diagnostics_Debug",
+    "Media_Capture"
 ]
 
 [dependencies.serde_json]
