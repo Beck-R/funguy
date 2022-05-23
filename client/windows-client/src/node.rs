@@ -44,8 +44,8 @@ impl Drive {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Node {
     // connection info
-    uuid: String,
-    random_input: String,
+    pub uuid: String,
+    pub random_input: String,
     host_name: String,
     ipv4: String,
 
