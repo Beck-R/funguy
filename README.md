@@ -4,7 +4,7 @@ Please don't use this maliciously.
 
 Frankly I would be surprised if anyone can/would.
 
-If you do end forking this then it is out my hands, so go buck wild I don't care.
+If you do end up forking this then it is out my hands, so go buck wild I don't care.
 
 I'm still not responsible in any way.
 
