@@ -1,3 +1,15 @@
+# IMPORTANT:
+
+Please don't use this maliciously.
+
+Frankly I would be surprised if anyone can/would.
+
+If you do end forking this then it is out my hands, so go buck wild I don't care.
+
+I'm still not responsible in any way.
+
+If you want to help me continue to develop this, please DM me I'd love to.
+
 # Funguy API:
 
 ## Installation
@@ -26,14 +38,6 @@ To use run manage.py commands use: `sudo docker-compose run web python manage.py
 
 # Funguy Clients:
 
+WIP
+
 # Other Documentation:
-
-# Useful links:
-
-- [http://www.cs.virginia.edu/~evans/theses/cotter.pdf](http://www.cs.virginia.edu/~evans/theses/cotter.pdf)
-
-- [https://crypto.stackexchange.com/questions/8695/algorithm-how-to-use-x-and-y-mouse-movement-co-ordinates-to-generate-random-dat](https://crypto.stackexchange.com/questions/8695/algorithm-how-to-use-x-and-y-mouse-movement-co-ordinates-to-generate-random-dat)
-
-- [https://crates.io/crates/windows](https://crates.io/crates/windows)
-
-- [https://crates.io/crates/winapi](https://crates.io/crates/winapi)
